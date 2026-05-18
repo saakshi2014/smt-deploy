@@ -3,7 +3,10 @@ from firebase_admin import credentials, firestore, auth
 from dotenv import load_dotenv
 import os
 
+
 load_dotenv()
+_firebase_app = None
+
 
 def initialize_firebase():
     """
@@ -54,3 +57,7 @@ def initialize_firebase():
     except Exception as e:
         print(f"Firebase initialisation error: {e}")
         raise
+
+        def get_firestore_client():
+    initialize_firebase()
+    return firestore.client()
