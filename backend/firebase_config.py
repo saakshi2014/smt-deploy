@@ -59,5 +59,5 @@ def initialize_firebase():
         raise
 
         def get_firestore_client():
-    initialize_firebase()
-    return firestore.client()
+            initialize_firebase()
+            return firestore.client()
