@@ -58,6 +58,6 @@ def initialize_firebase():
         print(f"Firebase initialisation error: {e}")
         raise
 
-        def get_firestore_client():
-            initialize_firebase()
-            return firestore.client()
+def get_firestore_client():
+    initialize_firebase()
+    return firestore.client()
