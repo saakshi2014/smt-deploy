@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, shrink-to-fit=no"/>
+    <title>{% block title %}Sales & Marketing Tracker{% endblock %}</title>
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css"
+          rel="stylesheet">
+
+    <!-- Our custom CSS -->
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/main.css') }}">
+          <!-- Chart.js — for bar charts, line graphs, doughnut charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- ── NAVBAR ─────────────────────────────────────────────────────────────── -->
+<nav class="navbar navbar-dark">
+    <div class="container-fluid px-3">
+
+        <!-- Brand -->
+        <a class="navbar-brand d-flex align-items-center gap-2" href="#">
+            <i class="bi bi-bar-chart-line-fill"></i>
+            <span class="d-none d-sm-inline">Sales & Marketing Tracker</span>
+            <span class="d-inline d-sm-none">SMT</span>
+        </a>
+
+        <!-- Right side: user info + logout -->
+        <div class="d-flex align-items-center gap-2">
+
+            <!-- Mobile sidebar toggle -->
+            <button class="btn btn-outline-light btn-sm d-md-none"
+                    id="sidebarToggle"
+                    onclick="toggleMobileSidebar()">
+                <i class="bi bi-list"></i>
+            </button>
+
+            <!-- Notification Bell -->
+            <div class="dropdown" id="notifBellContainer">
+                <button class="btn btn-outline-light btn-sm position-relative"
+                        id="notifBell"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        onclick="loadNotifications()">
+                    <i class="bi bi-bell"></i>
+                    <span id="notifBadge"
+                          class="position-absolute top-0 start-100
+                                 translate-middle badge rounded-pill bg-danger
+                                 d-none"
+                          style="font-size:0.6rem;">
+                        0
+                    </span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-end shadow"
+                     style="width:320px; max-height:400px; overflow-y:auto;">
+                    <div class="d-flex justify-content-between
+                                align-items-center px-3 py-2 border-bottom">
+                        <span class="fw-bold text-dark small">
+                            Notifications
+                        </span>
+                        <button class="btn btn-link btn-sm text-decoration-none
+                                       p-0"
+                                onclick="markAllRead()">
+                            Mark all read
+                        </button>
+                    </div>
+                    <div id="notifList">
+                        <div class="text-center py-3 text-muted small">
+                            Loading...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User name (hidden on very small screens) -->
+            <span class="text-white d-none d-sm-inline"
+                  id="navUserName"
+                  style="font-size:0.85rem; opacity:0.9;">
+                {% if user_name %}{{ user_name }}{% endif %}
+            </span>
+
+            <!-- Logout button -->
+            <a href="/logout"
+               class="btn btn-outline-light btn-sm">
+                <i class="bi bi-box-arrow-right"></i>
+                <span class="d-none d-md-inline ms-1">Logout</span>
+            </a>
+        </div>
+
+    </div>
+</nav>
+
+<!-- ── APP LAYOUT ─────────────────────────────────────────────────────────── -->
+<div class="app-layout">
+
+    <!-- SIDEBAR -->
+<div class="sidebar d-none d-md-flex flex-column" id="mainSidebar">
+        {% block sidebar %}{% endblock %}
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main-content">
+        {% block content %}{% endblock %}
+    </div>
+
+</div>
+
+<!-- ── MOBILE SIDEBAR OVERLAY ─────────────────────────────────────────────── -->
+<div id="sidebarOverlay" style="display:none;"></div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js">
+</script>
+
+<!-- Custom JS -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+<!-- Mobile sidebar toggle script -->
+<script>
+// ── MOBILE SIDEBAR TOGGLE ─────────────────────────────────────────────────
+let sidebarOpen = false;
+
+function toggleMobileSidebar() {
+    sidebarOpen = !sidebarOpen;
+
+    const sidebar       = document.getElementById('mainSidebar');
+    const overlay       = document.getElementById('sidebarOverlay');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+
+    if (sidebarOpen) {
+        sidebar.setAttribute('style',
+            'display: block !important; ' +
+            'position: fixed !important; ' +
+            'top: 56px !important; ' +
+            'left: 0 !important; ' +
+            'z-index: 1050 !important; ' +
+            'width: 220px !important; ' +
+            'min-width: 220px !important; ' +
+            'height: calc(100vh - 56px) !important; ' +
+            'overflow-y: auto !important; ' +
+            'background: #1A2332 !important;'
+        );
+        overlay.setAttribute('style',
+            'display: block !important; ' +
+            'position: fixed !important; ' +
+            'top: 0 !important; ' +
+            'left: 0 !important; ' +
+            'width: 100% !important; ' +
+            'height: 100% !important; ' +
+            'background: rgba(0,0,0,0.5) !important; ' +
+            'z-index: 999 !important;'
+        );
+        document.body.style.overflow = 'hidden';
+        if (sidebarToggle) {
+            sidebarToggle.innerHTML = '<i class="bi bi-x-lg"></i>';
+        }
+    } else {
+        closeMobileSidebar();
+    }
+}
+
+function closeMobileSidebar() {
+    sidebarOpen = false;
+    const sidebar       = document.getElementById('mainSidebar');
+    const overlay       = document.getElementById('sidebarOverlay');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+
+    sidebar.removeAttribute('style');
+    overlay.setAttribute('style', 'display: none !important;');
+    document.body.style.overflow = '';
+
+    if (sidebarToggle) {
+        sidebarToggle.innerHTML = '<i class="bi bi-list"></i>';
+    }
+}
+
+// Close when overlay is clicked
+document.addEventListener('DOMContentLoaded', function() {
+    const overlay = document.getElementById('sidebarOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', closeMobileSidebar);
+    }
+
+    // Close sidebar links on mobile
+    const sidebar = document.getElementById('mainSidebar');
+    if (sidebar) {
+        const links = sidebar.querySelectorAll('a');
+        links.forEach(link => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 768) {
+                    closeMobileSidebar();
+                }
+            });
+        });
+    }
+});
+
+// Close sidebar on resize to desktop
+window.addEventListener('resize', () => {
+    if (window.innerWidth >= 768) {
+        closeMobileSidebar();
+    }
+});
+</script>
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

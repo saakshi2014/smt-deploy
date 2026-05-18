@@ -1,0 +1,1926 @@
+{% extends "base.html" %}
+
+{% block title %}Team Pipeline — M1 Manager{% endblock %}
+
+{% block sidebar %}
+<p class="sidebar-section-label">Manager Menu</p>
+
+<a href="/dashboard/m1"
+   class="sidebar-link active" id="pipelineSideLink"
+   onclick="switchM1Tab('pipeline'); return false;">
+    <i class="bi bi-people"></i>Team Pipeline
+</a>
+<a href="#" class="sidebar-link" id="tasksSideLink"
+   onclick="switchM1Tab('tasks'); return false;">
+    <i class="bi bi-clipboard-check"></i>Assign Tasks
+    <span id="m1TasksBadge" class="badge bg-danger ms-1 d-none">!</span>
+</a>
+<a href="#" class="sidebar-link">
+    <i class="bi bi-bar-chart"></i>Team KPIs
+</a>
+{% endblock %}
+
+{% block content %}
+
+<!-- Tab Navigation -->
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item">
+        <a class="nav-link active" id="m1PipelineTab"
+           onclick="switchM1Tab('pipeline')" href="#">
+            <i class="bi bi-people me-2"></i>Team Pipeline
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="m1CoachingTab"
+           onclick="switchM1Tab('coaching')" href="#">
+            <i class="bi bi-chat-heart me-2"></i>Coaching
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="m1TasksTab"
+           onclick="switchM1Tab('tasks')" href="#">
+            <i class="bi bi-clipboard-check me-2"></i>Task Management
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="m1StagesTab"
+           onclick="switchM1Tab('stages')" href="#">
+            <i class="bi bi-funnel-fill me-2"></i>Pipeline Stages
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="m1KpiTab"
+           onclick="switchM1Tab('kpi')" href="#">
+            <i class="bi bi-bar-chart me-2"></i>Team KPIs
+        </a>
+    </li>
+</ul>
+
+<!-- ══════════ PIPELINE TAB ══════════ -->
+<div id="m1PipelineContent">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="fw-bold text-primary mb-1">
+                <i class="bi bi-people me-2"></i>Team Pipeline
+            </h4>
+            <p class="text-muted mb-0 small">
+                Monitor your team's lead activity
+            </p>
+        </div>
+        <a href="/api/export/leads"
+           class="btn btn-outline-success btn-sm me-2"
+           title="Export team leads as CSV">
+            <i class="bi bi-download me-1"></i>Export Leads
+        </a>
+        <a href="/api/export/kpi"
+           class="btn btn-outline-info btn-sm me-2"
+           title="Export KPI data as CSV">
+            <i class="bi bi-graph-up me-1"></i>Export KPIs
+        </a>
+        <button class="btn btn-outline-primary btn-sm"
+                onclick="fetchTeamLeads()">
+            <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+        </button>
+    </div>
+
+    <div id="teamStatsBar" class="mb-3">
+        <div class="row g-2">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body py-2 text-center text-muted">
+                        <div class="spinner-border spinner-border-sm me-2">
+                        </div>
+                        Loading team stats...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-semibold border-bottom">
+                    <i class="bi bi-bar-chart-steps me-2 text-primary"></i>
+                    Stage Distribution
+                </div>
+                <div class="card-body" id="stageDistribution">
+                    <p class="text-muted small text-center py-3">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card shadow-sm mb-3">
+                <div class="card-body py-2">
+                    <div class="row g-2 align-items-center">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-search text-muted"></i>
+                                </span>
+                                <input type="text" id="searchInput"
+                                       class="form-control form-control-sm"
+                                       placeholder="Search leads...">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select id="stageFilter"
+                                    class="form-select form-select-sm">
+                                <option value="">All Stages</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select id="memberFilter"
+                                    class="form-select form-select-sm">
+                                <option value="">All Members</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tableLoading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted">Loading team leads...</p>
+            </div>
+
+            <div id="teamLeadsTable" class="card shadow-sm d-none">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Lead Name</th>
+                                    <th>Company</th>
+                                    <th>Email</th>
+                                    <th>Stage</th>
+                                    <th>Employee</th>
+                                    <th>Added</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="teamLeadsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════ TASKS TAB ══════════ -->
+<div id="m1TasksContent" class="d-none">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="fw-bold text-primary mb-1">
+                <i class="bi bi-clipboard-check me-2"></i>Task Management
+            </h4>
+            <p class="text-muted mb-0 small">
+                Assign and monitor tasks for your team
+            </p>
+        </div>
+        <a href="/api/export/tasks"
+           class="btn btn-outline-success btn-sm me-2"
+           title="Export tasks as CSV">
+            <i class="bi bi-download me-1"></i>Export CSV
+        </a>
+        <button class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#createTaskModal">
+            <i class="bi bi-plus-lg me-2"></i>Create Task
+        </button>
+    </div>
+
+    <!-- Task Stats -->
+    <div id="taskStatsBar" class="mb-3"></div>
+
+    <!-- Task Filters -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body py-2">
+            <div class="row g-2">
+                <div class="col-md-4">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-search text-muted"></i>
+                        </span>
+                        <input type="text" id="taskSearch"
+                               class="form-control form-control-sm"
+                               placeholder="Search tasks...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select id="taskStatusFilter"
+                            class="form-select form-select-sm">
+                        <option value="">All Statuses</option>
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="overdue">Overdue</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select id="taskPriorityFilter"
+                            class="form-select form-select-sm">
+                        <option value="">All Priorities</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-outline-secondary btn-sm w-100"
+                            onclick="fetchTasks()">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tasks Loading -->
+    <div id="tasksLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Loading tasks...</p>
+    </div>
+
+    <!-- Tasks Table -->
+    <div id="tasksTableWrapper" class="card shadow-sm d-none">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Task</th>
+                            <th>Description</th>
+                            <th>Priority</th>
+                            <th>Due Date</th>
+                            <th>Assigned To</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tasksTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── CREATE TASK MODAL ───────────────────────────────────────────────────── -->
+<div class="modal fade" id="createTaskModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-plus-circle me-2"></i>Create New Task
+                </h5>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="createTaskError"
+                     class="alert alert-danger d-none"></div>
+                <form id="createTaskForm">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Task Title
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="taskTitle"
+                                   class="form-control"
+                                   placeholder="e.g. Follow up with stage 4 leads">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Description
+                            </label>
+                            <textarea id="taskDescription"
+                                      class="form-control" rows="2"
+                                      placeholder="Detailed instructions...">
+                            </textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Assign To
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select id="taskAssignee" class="form-select">
+                                <option value="">Select employee...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                Due Date
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" id="taskDueDate"
+                                   class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label fw-semibold">
+                                Priority
+                            </label>
+                            <select id="taskPriority" class="form-select">
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="low">Low</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="submitCreateTask"
+                        class="btn btn-primary fw-semibold"
+                        onclick="submitCreateTask()">
+                    <i class="bi bi-plus-lg me-1"></i>Create Task
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── HISTORY MODAL ───────────────────────────────────────────────────────── -->
+<div class="modal fade" id="historyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-clock-history me-2"></i>Stage History
+                </h5>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted mb-3">
+                    Lead: <strong id="historyLeadName"></strong>
+                </p>
+                <div id="historyBody">
+                    <p class="text-muted text-center py-3">Loading...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="taskToast"
+         class="toast align-items-center text-white bg-success border-0">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold">Done!</div>
+            <button type="button"
+                    class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+<!-- ══════════ CUSTOM STAGES TAB ══════════ -->
+<div id="m1StagesContent" class="d-none">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="fw-bold text-primary mb-1">
+                <i class="bi bi-funnel-fill me-2"></i>Pipeline Stages
+            </h4>
+            <p class="text-muted mb-0 small">
+                Manage pipeline stages for your team
+            </p>
+        </div>
+        <button class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#createStageModal">
+            <i class="bi bi-plus-lg me-2"></i>Add Custom Stage
+        </button>
+    </div>
+
+    <!-- Stage Summary -->
+    <div id="stageSummary" class="mb-3"></div>
+
+    <!-- Stages Table -->
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>#</th>
+                            <th>Stage Name</th>
+                            <th>Description</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stagesManagementBody">
+                        <tr>
+                            <td colspan="6"
+                                class="text-center py-4 text-muted">
+                                <div class="spinner-border
+                                            spinner-border-sm me-2"></div>
+                                Loading stages...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── CREATE STAGE MODAL ─────────────────────────────────────────────────── -->
+<div class="modal fade" id="createStageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Add Custom Pipeline Stage
+                </h5>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="createStageError"
+                     class="alert alert-danger d-none"></div>
+                <form id="createStageForm">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Stage Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" id="newStageName"
+                               class="form-control"
+                               placeholder="e.g. Proposal Sent">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Description
+                        </label>
+                        <textarea id="newStageDesc"
+                                  class="form-control" rows="2"
+                                  placeholder="What does this stage mean?">
+                        </textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Position in Pipeline
+                        </label>
+                        <input type="number" id="newStageOrder"
+                               class="form-control"
+                               placeholder="e.g. 5.5 (between stage 5 and 6)"
+                               step="0.5" min="1">
+                        <div class="form-text">
+                            Use decimal numbers to insert between
+                            existing stages (e.g. 4.5 goes between 4 and 5)
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="submitCreateStage"
+                        class="btn btn-primary fw-semibold"
+                        onclick="submitCreateStage()">
+                    <i class="bi bi-plus-lg me-1"></i>Create Stage
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── RENAME STAGE MODAL ─────────────────────────────────────────────────── -->
+<div class="modal fade" id="renameStageModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-pencil me-2"></i>Rename Stage
+                </h5>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="renameStageId">
+                <div id="renameStageError"
+                     class="alert alert-danger d-none"></div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">New Stage Name</label>
+                    <input type="text" id="renameStageInput"
+                           class="form-control">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="submitRenameStage"
+                        class="btn btn-primary"
+                        onclick="submitRenameStage()">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════ COACHING TAB ══════════ -->
+<div id="m1CoachingContent" class="d-none">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="fw-bold text-primary mb-1">
+                <i class="bi bi-chat-heart me-2"></i>Coaching Sessions
+            </h4>
+            <p class="text-muted mb-0 small">
+                Log and track coaching sessions with your team
+            </p>
+        </div>
+        <a href="/api/export/coaching"
+           class="btn btn-outline-success btn-sm me-2"
+           title="Export coaching sessions as CSV">
+            <i class="bi bi-download me-1"></i>Export CSV
+        </a>
+        <button class="btn btn-primary"
+                data-bs-toggle="modal"
+                data-bs-target="#logSessionModal">
+            <i class="bi bi-plus-lg me-2"></i>Log Session
+        </button>
+    </div>
+
+    <!-- Stats -->
+    <div id="coachingStatsBar" class="mb-3"></div>
+
+    <!-- Search -->
+    <div class="card shadow-sm mb-3">
+        <div class="card-body py-2">
+            <div class="input-group">
+                <span class="input-group-text bg-light">
+                    <i class="bi bi-search text-muted"></i>
+                </span>
+                <input type="text" id="coachingSearch"
+                       class="form-control form-control-sm"
+                       placeholder="Search by name or topic...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="coachingLoading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status"></div>
+        <p class="mt-2 text-muted">Loading sessions...</p>
+    </div>
+
+    <!-- Table -->
+    <div id="coachingTableWrapper" class="card shadow-sm d-none">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Team Member</th>
+                            <th>Date</th>
+                            <th>Topic</th>
+                            <th>Notes</th>
+                            <th>Follow-up</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coachingTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── LOG SESSION MODAL ──────────────────────────────────────────────────── -->
+<div class="modal fade" id="logSessionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-chat-heart me-2"></i>
+                    Log Coaching Session
+                </h5>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="coachingFormError"
+                     class="alert alert-danger d-none"></div>
+                <form id="logSessionForm">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Team Member
+                                <span class="text-danger">*</span>
+                            </label>
+                            <select id="coachingSpecialist"
+                                    class="form-select">
+                                <option value="">
+                                    Select team member...
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Session Date
+                                <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" id="coachingDate"
+                                   class="form-control">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Topic <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="coachingTopic"
+                                   class="form-control"
+                                   placeholder="e.g. Improving connection rate">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                Notes
+                            </label>
+                            <textarea id="coachingNotes"
+                                      class="form-control" rows="3"
+                                      placeholder="Session notes and outcomes...">
+                            </textarea>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">
+                                Follow-up Date (optional)
+                            </label>
+                            <input type="date" id="coachingFollowUp"
+                                   class="form-control">
+                            <div class="form-text">
+                                Set a date to check progress
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="submitLogSession"
+                        class="btn btn-primary fw-semibold"
+                        onclick="submitLogSession()">
+                    <i class="bi bi-check-lg me-1"></i>Log Session
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── EDIT SESSION MODAL ─────────────────────────────────────────────────── -->
+<div class="modal fade" id="editSessionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-pencil me-2"></i>Edit Session
+                </h5>
+                <button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editSessionId">
+                <div id="editSessionError"
+                     class="alert alert-danger d-none"></div>
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Topic</label>
+                        <input type="text" id="editSessionTopic"
+                               class="form-control">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label fw-semibold">Notes</label>
+                        <textarea id="editSessionNotes"
+                                  class="form-control" rows="3">
+                        </textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Follow-up Date
+                        </label>
+                        <input type="date" id="editSessionFollowUp"
+                               class="form-control">
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input type="checkbox"
+                                   id="editSessionCompleted"
+                                   class="form-check-input">
+                            <label class="form-check-label"
+                                   for="editSessionCompleted">
+                                Mark as completed
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="submitEditSession"
+                        class="btn btn-primary"
+                        onclick="submitEditSession()">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Coaching Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="coachingToast"
+         class="toast align-items-center text-white bg-success border-0">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold">Done!</div>
+            <button type="button"
+                    class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+
+<!-- ── SET KPI TARGETS MODAL ──────────────────────────────────────────────── -->
+<div class="modal fade" id="setTargetsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-bullseye me-2"></i>
+                    Set KPI Targets for Team Member
+                </h5>
+                <button type="button"
+                        class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+
+                <div id="setTargetsError"
+                     class="alert alert-danger d-none"></div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Employee
+                            <span class="text-danger">*</span>
+                        </label>
+                        <select id="targetEmployee"
+                                class="form-select">
+                            <option value="">
+                                Select team member...
+                            </option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            Period
+                        </label>
+                        <select id="targetPeriod" class="form-select">
+                            <option value="monthly">Monthly</option>
+                            <option value="weekly">Weekly</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr>
+
+                <p class="fw-bold text-primary mb-2">
+                    <i class="bi bi-activity me-2"></i>
+                    Lead Measures (Activity KPIs)
+                </p>
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">
+                            Outreach Count
+                        </label>
+                        <input type="number"
+                               id="tgt_outreachCount"
+                               class="form-control form-control-sm"
+                               value="50" min="0">
+                        <div class="form-text">
+                            Connection requests per period
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">
+                            Connection Rate %
+                        </label>
+                        <input type="number"
+                               id="tgt_connectionRate"
+                               class="form-control form-control-sm"
+                               value="40" min="0" max="100"
+                               step="0.1">
+                        <div class="form-text">
+                            % of requests accepted
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">
+                            Messages Sent
+                        </label>
+                        <input type="number"
+                               id="tgt_initialMessageCount"
+                               class="form-control form-control-sm"
+                               value="30" min="0">
+                        <div class="form-text">
+                            Initial messages per period
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">
+                            Reply Rate %
+                        </label>
+                        <input type="number"
+                               id="tgt_replyRate"
+                               class="form-control form-control-sm"
+                               value="30" min="0" max="100"
+                               step="0.1">
+                        <div class="form-text">
+                            % of messages that got replies
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-semibold">
+                            Meeting Conversion Rate %
+                        </label>
+                        <input type="number"
+                               id="tgt_meetingConversionRate"
+                               class="form-control form-control-sm"
+                               value="20" min="0" max="100"
+                               step="0.1">
+                        <div class="form-text">
+                            % of replies that became meetings
+                        </div>
+                    </div>
+                </div>
+
+                <hr>
+
+                <p class="fw-bold text-success mb-2">
+                    <i class="bi bi-graph-up-arrow me-2"></i>
+                    Lag Measures (Outcome KPIs)
+                </p>
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            Meetings Scheduled
+                        </label>
+                        <input type="number"
+                               id="tgt_meetingsScheduled"
+                               class="form-control form-control-sm"
+                               value="5" min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            Meetings Completed
+                        </label>
+                        <input type="number"
+                               id="tgt_meetingsCompleted"
+                               class="form-control form-control-sm"
+                               value="3" min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            Interested Leads
+                        </label>
+                        <input type="number"
+                               id="tgt_interestedLeads"
+                               class="form-control form-control-sm"
+                               value="8" min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            Warm Leads Nurtured
+                        </label>
+                        <input type="number"
+                               id="tgt_warmLeadsNurtured"
+                               class="form-control form-control-sm"
+                               value="3" min="0">
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                <button type="button"
+                        id="submitSetTargets"
+                        class="btn btn-success fw-semibold"
+                        onclick="submitKpiTargets()">
+                    <i class="bi bi-check-lg me-1"></i>
+                    Save Targets
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stage Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:9999">
+    <div id="stageToast"
+         class="toast align-items-center text-white bg-success border-0">
+        <div class="d-flex">
+            <div class="toast-body fw-semibold">Done!</div>
+            <button type="button"
+                    class="btn-close btn-close-white me-2 m-auto"
+                    data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
+<!-- ══════════ KPI TAB (M1) ══════════ -->
+<div id="m1KpiContent" class="d-none">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="fw-bold text-primary mb-1">
+                <i class="bi bi-bar-chart me-2"></i>Team KPIs
+            </h4>
+            <p class="text-muted mb-0 small">
+                Side-by-side KPI comparison for your team
+            </p>
+        </div>
+    </div>
+
+    <!-- Team KPI Comparison -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white border-bottom py-2
+                    d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-primary">
+                <i class="bi bi-people me-2"></i>
+                Team KPI Comparison
+            </span>
+           <div class="d-flex justify-content-between
+            align-items-center mb-3">
+
+    <div class="d-flex gap-2 align-items-center">
+
+        <select id="kpiSelector"
+                class="form-select form-select-sm"
+                style="width:180px;"
+                onchange="refreshTeamCharts()">
+
+            <option value="outreachCount">
+                Outreach Count
+            </option>
+
+            <option value="connectionRate">
+                Connection Rate
+            </option>
+
+            <option value="initialMessageCount">
+                Messages Sent
+            </option>
+
+            <option value="replyRate">
+                Reply Rate
+            </option>
+
+            <option value="meetingConversionRate">
+                Meeting Conv. Rate
+            </option>
+
+            <option value="meetingsScheduled">
+                Meetings Scheduled
+            </option>
+
+            <option value="meetingsCompleted">
+                Meetings Completed
+            </option>
+
+            <option value="interestedLeads">
+                Interested Leads
+            </option>
+
+        </select>
+
+    </select>
+                <button class="btn btn-sm btn-outline-success ms-2"
+                        data-bs-toggle="modal"
+                        data-bs-target="#setTargetsModal">
+                    <i class="bi bi-bullseye me-1"></i>
+                    Set Targets
+                </button>
+            </div>
+        </div>
+
+    <button class="btn btn-sm btn-outline-success"
+            data-bs-toggle="modal"
+            data-bs-target="#setTargetsModal">
+
+        <i class="bi bi-bullseye me-1"></i>
+        Set KPI Targets
+
+    </button>
+
+</div>
+        </div>
+        <div class="card-body">
+            <!-- Bar Chart -->
+            <div style="height:220px; position:relative;">
+                <canvas id="teamKpiBarChart"></canvas>
+            </div>
+            <hr class="my-3">
+            <!-- Table below chart -->
+            <div id="teamKpiContent">
+                <div class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm
+                                text-primary"></div>
+                    <span class="ms-2 text-muted small">
+                        Loading team KPIs...
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pipeline Funnel Chart -->
+    <div class="card border-0 shadow-sm mb-3">
+        <div class="card-header bg-white border-bottom py-2">
+            <span class="fw-bold text-primary">
+                <i class="bi bi-funnel me-2"></i>
+                Pipeline Funnel — Team View
+            </span>
+        </div>
+        <div class="card-body">
+            <div style="height:280px; position:relative;">
+                <canvas id="m1FunnelChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <!-- Custom KPI Column Management -->
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-bottom py-2
+                    d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-secondary">
+                <i class="bi bi-plus-square me-2"></i>Custom KPI Columns
+            </span>
+            <button class="btn btn-sm btn-outline-primary"
+                    data-bs-toggle="modal"
+                    data-bs-target="#createCustomKpiModal">
+                <i class="bi bi-plus-lg me-1"></i>Add Column
+            </button>
+        </div>
+        <div class="card-body" id="m1CustomKpiContent">
+            <p class="text-muted small text-center py-2">Loading...</p>
+        </div>
+    </div>
+</div>
+
+<!-- ── CREATE CUSTOM KPI MODAL ─────────────────────────────────────────────── -->
+<div class="modal fade" id="createCustomKpiModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Add Custom KPI Column
+                </h5>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="customKpiError"
+                     class="alert alert-danger d-none"></div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Column Name <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" id="customKpiName"
+                           class="form-control"
+                           placeholder="e.g. LinkedIn Posts">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Description</label>
+                    <textarea id="customKpiDesc" class="form-control"
+                              rows="2"
+                              placeholder="What does this KPI measure?">
+                    </textarea>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Data Type</label>
+                    <select id="customKpiType" class="form-select">
+                        <option value="numeric">Numeric (e.g. 15)</option>
+                        <option value="percentage">
+                            Percentage (e.g. 75%)
+                        </option>
+                        <option value="text">Text (e.g. Done)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="submitCustomKpiBtn"
+                        class="btn btn-primary fw-semibold"
+                        onclick="createCustomKpiColumn()">
+                    <i class="bi bi-plus-lg me-1"></i>Create Column
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/custom_stages.js') }}">
+</script>
+<script src="{{ url_for('static', filename='js/kpi_dashboard.js') }}">
+</script>
+<script src="{{ url_for('static', filename='js/charts.js') }}"></script>
+<script src="{{ url_for('static', filename='js/coaching.js') }}"></script>
+<script>
+    window.userRole = "m1_manager";
+</script>
+<script src="{{ url_for('static', filename='js/m1_dashboard.js') }}">
+</script>
+<script src="{{ url_for('static', filename='js/tasks.js') }}"></script>
+<script>
+ 
+ // Refresh bar chart when KPI selector changes
+function refreshTeamCharts() {
+    const kpiKey = document.getElementById('kpiSelector')
+                           ?.value || 'outreachCount';
+    buildTeamKpiBarChart('teamKpiBarChart', kpiKey, 'monthly');
+}
+
+// Load all M1 charts when KPI tab opens
+function loadM1Charts() {
+    const kpiKey = document.getElementById('kpiSelector')
+                           ?.value || 'outreachCount';
+    buildTeamKpiBarChart('teamKpiBarChart', kpiKey, 'monthly');
+    fetchAndRenderPipelineFunnel('m1FunnelChart', '/api/leads');
+}
+
+function switchM1Tab(tab) {
+    const tabs = ['pipeline', 'tasks', 'stages', 'kpi'];
+    tabs.forEach(t => {
+        const content = document.getElementById(`m1${capitalize(t)}Content`);
+        const tabEl   = document.getElementById(`m1${capitalize(t)}Tab`);
+        if (content) content.classList.add('d-none');
+        if (tabEl)   tabEl.classList.remove('active');
+    });
+
+    const activeContent = document.getElementById(
+        `m1${capitalize(tab)}Content`);
+    const activeTab     = document.getElementById(
+        `m1${capitalize(tab)}Tab`);
+    if (activeContent) activeContent.classList.remove('d-none');
+    if (activeTab)     activeTab.classList.add('active');
+
+ if (tab === 'tasks')    fetchTasks();
+    if (tab === 'stages')   fetchAllStagesForManagement();
+    if (tab === 'kpi') {
+        fetchTeamKpis('monthly');
+        fetchM1CustomKpiColumns();
+        setTimeout(loadM1Charts, 500);
+    }
+    if (tab === 'coaching') {
+        fetchCoachingAssignees();
+        fetchCoachingSessions();
+    }
+}
+
+function capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+async function fetchM1CustomKpiColumns() {
+
+    const container =
+        document.getElementById('m1CustomKpiContent');
+
+    if (!container) return;
+
+    try {
+
+        const response =
+            await fetch('/api/kpi/custom-columns');
+
+        const data =
+            await response.json();
+
+        if (!response.ok) {
+
+            container.innerHTML = `
+                <p class="text-danger">
+                    Failed to load KPI columns.
+                </p>
+            `;
+
+            return;
+        }
+
+        if (!data.columns || data.columns.length === 0) {
+
+            container.innerHTML = `
+                <p class="text-muted text-center py-3">
+                    No custom KPI columns yet.
+                </p>
+            `;
+
+            return;
+        }
+
+        let html = `
+
+            <div class="table-responsive">
+
+                <table class="table table-sm">
+
+                    <thead class="table-light">
+
+                        <tr>
+
+                            <th>Column Name</th>
+                            <th>Type</th>
+                            <th>Has Data</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+        `;
+
+        data.columns.forEach(col => {
+
+            const inactive =
+                col.isActive === false;
+
+            html += `
+
+                <tr class="${
+                    inactive
+                        ? 'table-secondary opacity-75'
+                        : ''
+                }">
+
+                    <td class="fw-semibold small">
+
+                        ${col.columnName}
+
+                        ${
+                            inactive
+                                ? `
+                                    <span class="badge bg-secondary ms-2">
+                                        Inactive
+                                    </span>
+                                  `
+                                : ''
+                        }
+
+                    </td>
+
+                    <td class="small text-muted">
+                        ${col.dataType}
+                    </td>
+
+                    <td>
+
+                        ${
+                            col.hasData
+                                ? `
+                                    <span class="badge bg-success">
+                                        Yes
+                                    </span>
+                                  `
+                                : `
+                                    <span class="badge bg-secondary">
+                                        No
+                                    </span>
+                                  `
+                        }
+
+                    </td>
+
+                    <td class="small text-muted">
+                        ${col.description || '—'}
+                    </td>
+
+                    <td>
+
+                        ${
+                            inactive
+
+                            ? `
+
+                                <button
+                                    class="btn btn-sm
+                                           btn-outline-success"
+
+                                    onclick="
+                                        reactivateKpiColumn(
+                                            '${col.columnId}'
+                                        )
+                                    ">
+
+                                    <i class="bi bi-eye"></i>
+
+                                </button>
+
+                              `
+
+                            : `
+
+                                <button
+                                    class="btn btn-sm
+                                           btn-outline-warning"
+
+                                    onclick="
+                                        deactivateKpiColumn(
+                                            '${col.columnId}'
+                                        )
+                                    ">
+
+                                    <i class="bi bi-eye-slash"></i>
+
+                                </button>
+
+                              `
+                        }
+
+                    </td>
+
+                </tr>
+            `;
+        });
+
+        html += `
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        `;
+
+        container.innerHTML = html;
+
+    } catch (error) {
+
+        console.error(error);
+
+        container.innerHTML = `
+            <p class="text-danger">
+                Failed to load KPI columns.
+            </p>
+        `;
+    }
+}
+
+async function deactivateKpiColumn(columnId) {
+
+    const confirmDeactivate = confirm(
+        'SRS Compliance:\n\n' +
+        'Deactivating this KPI column will hide it from employees.\n' +
+        'Historical data will remain preserved.\n\n' +
+        'Continue?'
+    );
+
+    if (!confirmDeactivate) return;
+
+    try {
+
+        const response = await fetch(
+
+            `/api/kpi/custom-columns/${columnId}/deactivate`,
+
+            {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+
+            fetchM1CustomKpiColumns();
+
+            const toast = document.getElementById('stageToast');
+
+            if (toast) {
+
+                toast.querySelector('.toast-body').textContent =
+                    `Column deactivated. ${
+                        data.entriesPreserved || 0
+                    } entries preserved.`;
+
+                toast.className =
+                    'toast align-items-center text-white bg-warning border-0';
+
+                new bootstrap.Toast(toast, {
+                    delay: 4000
+                }).show();
+            }
+
+        } else {
+
+            alert(data.error || 'Failed to deactivate.');
+
+        }
+
+    } catch (error) {
+
+        alert('Network error.');
+
+    }
+}
+
+
+
+async function reactivateKpiColumn(columnId) {
+
+    try {
+
+        const response = await fetch(
+
+            `/api/kpi/custom-columns/${columnId}/reactivate`,
+
+            {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (response.ok) {
+
+            fetchM1CustomKpiColumns();
+
+            const toast = document.getElementById('stageToast');
+
+            if (toast) {
+
+                toast.querySelector('.toast-body').textContent =
+                    'Column reactivated successfully.';
+
+                toast.className =
+                    'toast align-items-center text-white bg-success border-0';
+
+                new bootstrap.Toast(toast, {
+                    delay: 4000
+                }).show();
+            }
+
+        } else {
+
+            alert(data.error || 'Failed to reactivate.');
+
+        }
+
+    } catch (error) {
+
+        alert('Network error.');
+
+    }
+}
+
+async function createCustomKpiColumn() {
+    const name    = document.getElementById('customKpiName').value.trim();
+    const desc    = document.getElementById('customKpiDesc').value.trim();
+    const type    = document.getElementById('customKpiType').value;
+    const errorEl = document.getElementById('customKpiError');
+
+    errorEl.classList.add('d-none');
+
+    if (!name) {
+        errorEl.textContent = 'Column name is required.';
+        errorEl.classList.remove('d-none');
+        return;
+    }
+
+    const btn       = document.getElementById('submitCustomKpiBtn');
+    btn.disabled    = true;
+    btn.textContent = 'Creating...';
+
+    try {
+        const response = await fetch('/api/kpi/custom-columns', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                columnName:  name,
+                description: desc,
+                dataType:    type
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            bootstrap.Modal.getInstance(
+                document.getElementById('createCustomKpiModal')
+            ).hide();
+            document.getElementById('customKpiName').value = '';
+            document.getElementById('customKpiDesc').value = '';
+            fetchM1CustomKpiColumns();
+        } else {
+            errorEl.textContent = data.error || 'Failed to create column.';
+            errorEl.classList.remove('d-none');
+        }
+    } catch (error) {
+        errorEl.textContent = 'Network error.';
+        errorEl.classList.remove('d-none');
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Create Column';
+    }
+}
+// Populate target employee dropdown
+async function populateTargetDropdown() {
+    const select = document.getElementById('targetEmployee');
+    if (!select || select.options.length > 1) return;
+    try {
+        const r = await fetch('/api/tasks/assignees');
+        const d = await r.json();
+        if (r.ok) {
+            d.assignees.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.uid;
+                opt.textContent = a.displayName || a.email;
+                select.appendChild(opt);
+            });
+        }
+    } catch (e) { console.error(e); }
+}
+
+async function submitKpiTargets() {
+    const employeeUid = document.getElementById('targetEmployee').value;
+    const period      = document.getElementById('targetPeriod').value;
+    const errorEl     = document.getElementById('setTargetsError');
+    errorEl.classList.add('d-none');
+
+    if (!employeeUid) {
+        errorEl.textContent = 'Please select an employee.';
+        errorEl.classList.remove('d-none');
+        return;
+    }
+
+    const targets = {
+        outreachCount:
+            +document.getElementById('tgt_outreachCount').value,
+        connectionRate:
+            +document.getElementById('tgt_connectionRate').value,
+        initialMessageCount:
+            +document.getElementById('tgt_initialMessageCount').value,
+        replyRate:
+            +document.getElementById('tgt_replyRate').value,
+        meetingConversionRate:
+            +document.getElementById('tgt_meetingConversionRate').value,
+        meetingsScheduled:
+            +document.getElementById('tgt_meetingsScheduled').value,
+        meetingsCompleted:
+            +document.getElementById('tgt_meetingsCompleted').value,
+        interestedLeads:
+            +document.getElementById('tgt_interestedLeads').value,
+        warmLeadsNurtured:
+            +document.getElementById('tgt_warmLeadsNurtured').value,
+    };
+
+    const btn = document.getElementById('submitSetTargets');
+    btn.disabled    = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        const response = await fetch('/api/kpi/targets', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ employeeUid, period, targets })
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+            bootstrap.Modal.getInstance(
+                document.getElementById('setTargetsModal')
+            ).hide();
+            fetchTeamKpis(period);
+            alert('✅ KPI targets saved successfully!');
+        } else {
+            errorEl.textContent = data.error || 'Failed to save.';
+            errorEl.classList.remove('d-none');
+        }
+    } catch (error) {
+        errorEl.textContent = 'Network error.';
+        errorEl.classList.remove('d-none');
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = 'Save Targets';
+    }
+}
+
+// Load dropdown when modal opens
+document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('setTargetsModal');
+    if (modal) {
+        modal.addEventListener('show.bs.modal', populateTargetDropdown);
+    }
+});
+// ── KPI TARGET SETTING ────────────────────────────────────────────────────────
+
+async function populateTargetDropdown() {
+    const select = document.getElementById('targetEmployee');
+    if (!select) return;
+
+    // Only populate once
+    if (select.options.length > 1) return;
+
+    try {
+        const response = await fetch('/api/tasks/assignees');
+        const data     = await response.json();
+        if (response.ok) {
+            data.assignees.forEach(a => {
+                const opt       = document.createElement('option');
+                opt.value       = a.uid;
+                opt.textContent = a.displayName || a.email;
+                select.appendChild(opt);
+            });
+        }
+    } catch (error) {
+        console.error('Error loading employees:', error);
+    }
+}
+
+
+async function submitKpiTargets() {
+    const employeeUid = document.getElementById(
+        'targetEmployee').value;
+    const period      = document.getElementById(
+        'targetPeriod').value;
+    const errorEl     = document.getElementById('setTargetsError');
+
+    errorEl.classList.add('d-none');
+
+    if (!employeeUid) {
+        errorEl.textContent = 'Please select an employee.';
+        errorEl.classList.remove('d-none');
+        return;
+    }
+
+    // Collect all target values
+    const targets = {
+        outreachCount:
+            parseFloat(document.getElementById(
+                'tgt_outreachCount').value) || 0,
+        connectionRate:
+            parseFloat(document.getElementById(
+                'tgt_connectionRate').value) || 0,
+        initialMessageCount:
+            parseFloat(document.getElementById(
+                'tgt_initialMessageCount').value) || 0,
+        replyRate:
+            parseFloat(document.getElementById(
+                'tgt_replyRate').value) || 0,
+        meetingConversionRate:
+            parseFloat(document.getElementById(
+                'tgt_meetingConversionRate').value) || 0,
+        meetingsScheduled:
+            parseFloat(document.getElementById(
+                'tgt_meetingsScheduled').value) || 0,
+        meetingsCompleted:
+            parseFloat(document.getElementById(
+                'tgt_meetingsCompleted').value) || 0,
+        interestedLeads:
+            parseFloat(document.getElementById(
+                'tgt_interestedLeads').value) || 0,
+        warmLeadsNurtured:
+            parseFloat(document.getElementById(
+                'tgt_warmLeadsNurtured').value) || 0,
+    };
+
+    const btn       = document.getElementById('submitSetTargets');
+    btn.disabled    = true;
+    btn.textContent = 'Saving...';
+
+    try {
+        const response = await fetch('/api/kpi/targets', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                employeeUid, period, targets
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Close modal
+            bootstrap.Modal.getInstance(
+                document.getElementById('setTargetsModal')
+            ).hide();
+
+            // Refresh KPI table to show new targets
+            fetchTeamKpis(period);
+            setTimeout(loadM1Charts, 600);
+
+            // Show success
+            const toast = document.getElementById('stageToast');
+            if (toast) {
+                toast.querySelector('.toast-body').textContent =
+                    '✅ KPI targets saved successfully!';
+                toast.className =
+                    'toast align-items-center text-white bg-success border-0';
+                new bootstrap.Toast(toast, { delay: 4000 }).show();
+            }
+        } else {
+            errorEl.textContent = data.error || 'Failed to save targets.';
+            errorEl.classList.remove('d-none');
+        }
+    } catch (error) {
+        errorEl.textContent = 'Network error. Please try again.';
+        errorEl.classList.remove('d-none');
+    } finally {
+        btn.disabled    = false;
+        btn.innerHTML   =
+            '<i class="bi bi-check-lg me-1"></i>Save Targets';
+    }
+}
+
+
+// Load employee dropdown when Set Targets modal opens
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Load custom KPI columns
+    if (typeof fetchM1CustomKpiColumns === 'function') {
+        fetchM1CustomKpiColumns();
+    }
+
+    // Load KPI table
+    if (typeof fetchTeamKpis === 'function') {
+        fetchTeamKpis('monthly');
+    }
+
+    // LOAD FUNNEL CHART
+    if (typeof fetchAndRenderPipelineFunnel === 'function') {
+
+        fetchAndRenderPipelineFunnel(
+            'm1FunnelChart',
+            '/api/leads'
+        );
+    }
+
+    // KPI Target modal dropdown
+    const modal = document.getElementById('setTargetsModal');
+
+    if (modal && typeof populateTargetDropdown === 'function') {
+
+        modal.addEventListener(
+            'show.bs.modal',
+            populateTargetDropdown
+        );
+    }
+});
+
+</script>
+<!-- ── SET KPI TARGETS MODAL ──────────────────────────────────────────────── -->
+<div class="modal fade" id="setTargetsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title fw-bold">
+                    <i class="bi bi-bullseye me-2"></i>
+                    Set KPI Targets for Team Member
+                </h5>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="setTargetsError"
+                     class="alert alert-danger d-none"></div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Select Employee
+                        <span class="text-danger">*</span>
+                    </label>
+                    <select id="targetEmployee" class="form-select">
+                        <option value="">Select team member...</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Period</label>
+                    <select id="targetPeriod" class="form-select">
+                        <option value="monthly">Monthly</option>
+                        <option value="weekly">Weekly</option>
+                    </select>
+                </div>
+                <hr>
+                <p class="fw-semibold text-primary">
+                    <i class="bi bi-activity me-2"></i>Lead Measures
+                </p>
+                <div class="row g-2">
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">
+                            Outreach Count
+                        </label>
+                        <input type="number" id="tgt_outreachCount"
+                               class="form-control form-control-sm"
+                               value="50" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">
+                            Connection Rate %
+                        </label>
+                        <input type="number" id="tgt_connectionRate"
+                               class="form-control form-control-sm"
+                               value="40" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">
+                            Messages Sent
+                        </label>
+                        <input type="number" id="tgt_initialMessageCount"
+                               class="form-control form-control-sm"
+                               value="30" min="0">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">
+                            Reply Rate %
+                        </label>
+                        <input type="number" id="tgt_replyRate"
+                               class="form-control form-control-sm"
+                               value="30" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-semibold">
+                            Meeting Conv Rate %
+                        </label>
+                        <input type="number"
+                               id="tgt_meetingConversionRate"
+                               class="form-control form-control-sm"
+                               value="20" min="0" max="100" step="0.1">
+                    </div>
+                </div>
+                <hr>
+                <p class="fw-semibold text-success mt-2">
+                    <i class="bi bi-graph-up-arrow me-2"></i>
+                    Lag Measures
+                </p>
+                <div class="row g-2">
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            Mtg Scheduled
+                        </label>
+                        <input type="number" id="tgt_meetingsScheduled"
+                               class="form-control form-control-sm"
+                               value="5" min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            Mtg Completed
+                        </label>
+                        <input type="number" id="tgt_meetingsCompleted"
+                               class="form-control form-control-sm"
+                               value="3" min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            Interested Leads
+                        </label>
+                        <input type="number" id="tgt_interestedLeads"
+                               class="form-control form-control-sm"
+                               value="8" min="0">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label small fw-semibold">
+                            Warm Leads Nurtured
+                        </label>
+                        <input type="number" id="tgt_warmLeadsNurtured"
+                               class="form-control form-control-sm"
+                               value="3" min="0">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Cancel</button>
+                <button type="button" id="submitSetTargets"
+                        class="btn btn-success fw-semibold"
+                        onclick="submitKpiTargets()">
+                    <i class="bi bi-check-lg me-1"></i>Save Targets
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

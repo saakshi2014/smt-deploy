@@ -1,0 +1,540 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sales & Marketing Tracker — Global Styles
+   Day 9: Full responsive polish
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── GLOBAL VARIABLES ───────────────────────────────────────────────────── */
+:root {
+    --primary:       #1F4E79;
+    --primary-light: #2E75B6;
+    --primary-pale:  #D6E4F0;
+    --success:       #1E8449;
+    --warning:       #CA6F1E;
+    --danger:        #922B21;
+    --sidebar-width: 220px;
+    --navbar-height: 56px;
+    --font-main:     'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ── BASE ───────────────────────────────────────────────────────────────── */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-main);
+    font-size:   14px;
+    color:       #1A1A1A;
+    background:  #F4F6F9;
+}
+
+/* ── SCROLLBAR (subtle) ─────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #F1F1F1; }
+::-webkit-scrollbar-thumb { background: #CCCCCC; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #AAAAAA; }
+
+/* ── NAVBAR ─────────────────────────────────────────────────────────────── */
+.navbar {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%) !important;
+    height:       var(--navbar-height);
+    box-shadow:   0 2px 8px rgba(0,0,0,0.15);
+    padding:      0 1.5rem;
+    position:     sticky;
+    top:          0;
+    z-index:      1000;
+}
+
+.navbar-brand {
+    font-size:      1rem;
+    font-weight:    700;
+    letter-spacing: 0.3px;
+    color:          white !important;
+}
+
+.navbar-brand i {
+    font-size: 1.2rem;
+}
+
+/* User name in navbar */
+#navUserName {
+    font-size:   0.85rem;
+    opacity:     0.9;
+    max-width:   200px;
+    overflow:    hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────────────────────────── */
+.sidebar {
+    width:      var(--sidebar-width);
+    min-width:  var(--sidebar-width);
+    background: #1A2332;
+    min-height: calc(100vh - var(--navbar-height));
+    padding:    1rem 0.75rem;
+    position:   sticky;
+    top:        var(--navbar-height);
+    height:     calc(100vh - var(--navbar-height));
+    overflow-y: auto;
+    transition: width 0.3s ease;
+}
+
+.sidebar-section-label {
+    font-size:      0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color:          #6C757D;
+    font-weight:    700;
+    padding:        0.5rem 0.5rem 0.25rem;
+    margin-top:     0.5rem;
+}
+
+.sidebar-link {
+    display:         block;
+    color:           rgba(255,255,255,0.65);
+    text-decoration: none;
+    padding:         0.5rem 0.75rem;
+    border-radius:   8px;
+    margin-bottom:   2px;
+    font-size:       0.875rem;
+    transition:      all 0.2s ease;
+}
+
+.sidebar-link:hover {
+    background: rgba(255,255,255,0.1);
+    color:      white;
+}
+
+.sidebar-link.active {
+    background: rgba(46, 117, 182, 0.4);
+    color:      white;
+    font-weight: 600;
+}
+
+.sidebar-link i {
+    width:       20px;
+    text-align:  center;
+    margin-right: 0.5rem;
+    font-size:   0.9rem;
+}
+
+/* ── MAIN CONTENT AREA ───────────────────────────────────────────────────── */
+.main-content {
+    flex: 1;
+    padding:    1.5rem;
+    overflow-y: auto;
+    min-width:  0;
+}
+
+/* ── LAYOUT WRAPPER ──────────────────────────────────────────────────────── */
+.app-layout {
+    display:    flex;
+    min-height: calc(100vh - var(--navbar-height));
+}
+
+/* ── CARDS ───────────────────────────────────────────────────────────────── */
+.card {
+    border:        none;
+    border-radius: 10px;
+    box-shadow:    0 1px 4px rgba(0,0,0,0.08);
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    font-size:     0.9rem;
+    padding:       0.75rem 1rem;
+}
+
+.card-body {
+    padding: 1rem;
+}
+
+/* Hover effect for clickable cards */
+.card-clickable {
+    cursor:     pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-clickable:hover {
+    transform:  translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+/* ── TABLES ──────────────────────────────────────────────────────────────── */
+.table {
+    font-size: 0.875rem;
+}
+
+.table thead th {
+    font-size:      0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color:          #6C757D;
+    font-weight:    700;
+    border-bottom:  2px solid #E9ECEF;
+    padding:        0.6rem 0.75rem;
+    background:     #F8F9FA;
+}
+
+.table tbody td {
+    padding:        0.6rem 0.75rem;
+    vertical-align: middle;
+    border-bottom:  1px solid #F0F0F0;
+}
+
+.table tbody tr:hover {
+    background: #F0F7FF;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* ── STAGE BADGES ────────────────────────────────────────────────────────── */
+.stage-badge {
+    padding:       3px 10px;
+    border-radius: 12px;
+    font-size:     0.72rem;
+    font-weight:   600;
+    white-space:   nowrap;
+    display:       inline-block;
+}
+
+/* ── BUTTONS ─────────────────────────────────────────────────────────────── */
+.btn {
+    font-size:     0.85rem;
+    border-radius: 8px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    border:     none;
+}
+
+.btn-primary:hover {
+    background: var(--primary-light);
+}
+
+.btn-sm {
+    padding:   0.25rem 0.6rem;
+    font-size: 0.8rem;
+}
+
+/* ── FORMS ───────────────────────────────────────────────────────────────── */
+.form-control, .form-select {
+    font-size:     0.875rem;
+    border-radius: 8px;
+    border:        1px solid #DDE2E8;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary-light);
+    box-shadow:   0 0 0 3px rgba(46, 117, 182, 0.15);
+}
+
+.form-label {
+    font-size:   0.85rem;
+    font-weight: 600;
+    color:       #344054;
+}
+
+.input-group-text {
+    border:        1px solid #DDE2E8;
+    border-radius: 8px 0 0 8px;
+}
+
+/* ── MODALS ──────────────────────────────────────────────────────────────── */
+.modal-content {
+    border:        none;
+    border-radius: 12px;
+    box-shadow:    0 10px 40px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+    padding:       1rem 1.25rem;
+    border-bottom: 1px solid #F0F0F0;
+}
+
+.modal-title {
+    font-size: 1rem;
+}
+
+.modal-footer {
+    padding:    0.75rem 1.25rem;
+    border-top: 1px solid #F0F0F0;
+}
+
+/* ── PROGRESS BARS ───────────────────────────────────────────────────────── */
+.progress {
+    border-radius: 4px;
+    background:    #E9ECEF;
+}
+
+/* ── ALERTS ──────────────────────────────────────────────────────────────── */
+.alert {
+    border:        none;
+    border-radius: 10px;
+    font-size:     0.875rem;
+}
+
+/* ── BREADCRUMB ──────────────────────────────────────────────────────────── */
+.breadcrumb {
+    background:    transparent;
+    padding:       0;
+    margin:        0;
+    font-size:     0.85rem;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+    color: #ADB5BD;
+}
+
+/* ── STATS CARDS ─────────────────────────────────────────────────────────── */
+.stat-card {
+    border-radius:  10px;
+    padding:        0.875rem;
+    text-align:     center;
+    border:         none;
+    box-shadow:     0 1px 4px rgba(0,0,0,0.08);
+}
+
+.stat-card .stat-value {
+    font-size:   1.75rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.stat-card .stat-label {
+    font-size:  0.75rem;
+    color:      #6C757D;
+    margin-top: 0.25rem;
+}
+
+/* ── LOADING SPINNER ─────────────────────────────────────────────────────── */
+.loading-container {
+    display:         flex;
+    flex-direction:  column;
+    align-items:     center;
+    justify-content: center;
+    padding:         3rem;
+    color:           #6C757D;
+}
+
+.loading-container p {
+    margin-top: 0.75rem;
+    font-size:  0.875rem;
+}
+
+/* ── EMPTY STATE ─────────────────────────────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding:    3rem 1.5rem;
+    color:      #6C757D;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    opacity:   0.25;
+    display:   block;
+    margin-bottom: 1rem;
+}
+
+.empty-state p {
+    font-size:   0.9rem;
+    margin:      0;
+}
+
+/* ── TOAST ───────────────────────────────────────────────────────────────── */
+.toast {
+    border-radius: 10px;
+    box-shadow:    0 4px 16px rgba(0,0,0,0.15);
+    min-width:     260px;
+}
+
+/* ── PAGE HEADER ─────────────────────────────────────────────────────────── */
+.page-header {
+    display:         flex;
+    justify-content: space-between;
+    align-items:     center;
+    margin-bottom:   1rem;
+}
+
+.page-header h4 {
+    font-size:   1.15rem;
+    font-weight: 700;
+    margin:      0;
+    color:       var(--primary);
+}
+
+.page-header p {
+    font-size: 0.8rem;
+    color:     #6C757D;
+    margin:    0.15rem 0 0;
+}
+
+/* ── FILTER BAR ──────────────────────────────────────────────────────────── */
+.filter-bar {
+    background:    white;
+    border-radius: 10px;
+    padding:       0.75rem 1rem;
+    box-shadow:    0 1px 4px rgba(0,0,0,0.06);
+    margin-bottom: 1rem;
+}
+
+/* ── DETAIL PANEL ────────────────────────────────────────────────────────── */
+.detail-panel {
+    border-radius:  10px;
+    border-left:    4px solid var(--primary-light) !important;
+    box-shadow:     0 2px 8px rgba(0,0,0,0.08);
+    margin-bottom:  1rem;
+}
+
+.detail-panel .card-header {
+    background:    #F8FBFE;
+    border-bottom: 1px solid #E8F0F8;
+}
+
+/* ── TEAM CARDS ──────────────────────────────────────────────────────────── */
+.team-card {
+    border-radius: 10px;
+    transition:    transform 0.2s ease, box-shadow 0.2s ease;
+    cursor:        pointer;
+}
+
+.team-card:hover {
+    transform:  translateY(-4px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.12) !important;
+}
+
+.team-card .card-header {
+    background:    linear-gradient(135deg, var(--primary), var(--primary-light));
+    color:         white;
+    font-weight:   600;
+    font-size:     0.9rem;
+}
+
+.team-card .card-footer {
+    background:  white;
+    font-size:   0.8rem;
+    text-align:  center;
+    padding:     0.5rem;
+    border-top:  1px solid #F0F0F0;
+}
+
+/* ── BADGE ───────────────────────────────────────────────────────────────── */
+.badge {
+    font-size:     0.72rem;
+    border-radius: 6px;
+    font-weight:   600;
+}
+
+/* ── RESPONSIVE: TABLET ──────────────────────────────────────────────────── */
+@media (max-width: 991px) {
+    :root {
+        --sidebar-width: 180px;
+    }
+
+    .main-content {
+        padding: 1rem;
+    }
+
+    .table thead th,
+    .table tbody td {
+        padding: 0.5rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .stat-card .stat-value {
+        font-size: 1.4rem;
+    }
+}
+
+/* ── RESPONSIVE: MOBILE ──────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+    :root {
+        --sidebar-width: 0px;
+    }
+
+    /* Hide sidebar on mobile by default */
+    #mainSidebar {
+        display:  none;
+        position: fixed;
+        top:      56px;
+        left:     0;
+        z-index:  1050;
+        width:    220px !important;
+        min-width: 220px !important;
+        height:   calc(100vh - 56px);
+    }
+
+    .main-content {
+        padding: 0.75rem;
+    }
+
+    /* Stack page header on mobile */
+    .page-header {
+        flex-direction: column;
+        align-items:    flex-start;
+        gap:            0.5rem;
+    }
+
+    /* Make tables horizontally scrollable */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Stack filter bar on mobile */
+    .filter-bar .row {
+        gap: 0.5rem;
+    }
+
+    /* Smaller navbar brand text */
+    .navbar-brand {
+        font-size: 0.85rem;
+    }
+
+    /* Stack stat cards */
+    .stat-card .stat-value {
+        font-size: 1.25rem;
+    }
+
+    /* Full width modals on mobile */
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+}
+
+/* ── RESPONSIVE: SMALL MOBILE ────────────────────────────────────────────── */
+@media (max-width: 480px) {
+    body {
+        font-size: 13px;
+    }
+
+    .btn {
+        font-size: 0.8rem;
+        padding:   0.3rem 0.6rem;
+    }
+
+    .card-body {
+        padding: 0.75rem;
+    }
+}
+
+/* ── PRINT STYLES ────────────────────────────────────────────────────────── */
+@media print {
+    .sidebar,
+    .navbar,
+    .btn,
+    .modal { display: none !important; }
+
+    .main-content {
+        padding: 0;
+    }
+
+    .card {
+        box-shadow: none;
+        border:     1px solid #DDD;
+    }
+}
