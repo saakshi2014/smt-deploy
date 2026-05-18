@@ -61,3 +61,11 @@ def initialize_firebase():
 def get_firestore_client():
     initialize_firebase()
     return firestore.client()
+
+def get_auth_client():
+    """
+    Returns the Firebase Auth client.
+    Used by auth.py for token verification.
+    """
+    initialize_firebase()
+    return firebase_admin.auth
